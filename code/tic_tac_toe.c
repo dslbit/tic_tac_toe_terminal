@@ -1,10 +1,9 @@
 // TODOs:
 // compile with -W4 -WX and clean for cl, gcc and clang
 // --
-// Do compiler checks (Symbolic constants, search for erros and warning)
-// Figure out a better way to wrap the "system("cls");" instruction to work both on Windows and Linux
-// Should I replace (stdio.h / stdlib.h / math.h) printf, sscanf, strlen, gets, getchar, etc. ?
-// Remove CRuntime
+// Do compiler checks (Symbolic constants, search for errors and warning)
+// Figure out a better way to wrap up the "system("cls");" instruction to work both on Windows and Linux
+// Remove CRuntime (Should I replace stdio.h/stdlib.h? printf, sscanf, strlen, fgets, getchar, etc. ?)
 // should I make this c89-cpp compatible?
 
 // DESIGN IDEAS:
@@ -18,9 +17,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
+#define MAX_USER_CHAR_INPUT (61)
 #define GAME_BOARD_MAX_ROWS (3)
 #define GAME_BOARD_MAX_COLUMNS (3)
 #define MAX_AVAILABLE_GAME_BOARD_POSITIONS (GAME_BOARD_MAX_ROWS * GAME_BOARD_MAX_COLUMNS + 1)
@@ -34,7 +33,7 @@ int main(void)
 	char game_board[GAME_BOARD_MAX_ROWS][GAME_BOARD_MAX_COLUMNS];
 	int game_board_moves;
 	char winner;
-	char terminal_input[256];
+	char terminal_input[MAX_USER_CHAR_INPUT];
 	int row_input, column_input;
 
 	// variables default value
@@ -73,13 +72,14 @@ int main(void)
 
 		// NOTE(Douglas): here, this loop is necessary, otherwise stdin will fuck up the
 		//  input down there, the logic won't fail but it will show error messages about
-		//  the syntax to the user, and that shouldn't happen.
+		//  the syntax to the user, and that shouldn't happen. I could check for EOF, but
+		//  it's not necessary actually.
 		while( getchar() != '\n' );
 
 		system("cls");
 	}
 
-	// game main loop
+	// main game loop
 	do
 	{
 		system("cls");
@@ -136,11 +136,8 @@ int main(void)
 				row_input = column_input = EOF;
 				input_length = 0;
 
-				// NOTE(Douglas): if "terminal_input" is too small for the user input, then things could get
-				// ugly, because "gets(...)" doesn't consider "terminal_input" length. It can easly write
-				// into another memory address space.
 				printf("\nPlease choose a position on the board (syntax: row,column): ");
-				gets(&terminal_input);
+				fgets(terminal_input, MAX_USER_CHAR_INPUT, stdin);
 				input_length = strlen(terminal_input);
 				input_result = sscanf(terminal_input, "%d,%d", &row_input, &column_input);
 				
@@ -153,7 +150,7 @@ int main(void)
 				{
 					printf("> wrong index syntax, invalid game board position\n");
 				}
-				else if(input_length != 3) // checking the game board syntax: x,x
+				else if(input_length != 4) // checking the game board syntax: x,x\n
 				{
 					printf("> wrong input syntax, please try again as informed: row,column\n");
 					continue;
@@ -222,7 +219,7 @@ int main(void)
 			{
 				end_of_game = TRUE;
 			}
-			// ended in a draw?
+			// checking to see if it ended in a draw
 			else if(game_board_moves == 9 && !end_of_game)
 			{
 				end_of_game = TRUE;
