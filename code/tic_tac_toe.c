@@ -1,3 +1,11 @@
+/* useful check when compiling the file as as cpp without the crt _fltused init */
+#if defined(__cplusplus)
+extern "C" {
+int _fltused = 1;
+#endif
+
+
+
 #define GLOBAL static
 
 #define TRUE (1)
@@ -6,6 +14,7 @@
 typedef unsigned int uint;
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -16,7 +25,7 @@ typedef unsigned int uint;
 
 GLOBAL int global_running = TRUE;
 
-int main(void)
+int mainCRTStartup(void)
 {
 	int i, j;
 	int end_of_game, ended_in_a_draw;
@@ -25,19 +34,20 @@ int main(void)
 	char winner;
 	char terminal_input[MAX_USER_CHAR_INPUT];
 	int row_input, column_input;
+	time_t current_local_time;
 
-	// variables default value
+	/* variables default value */
 	end_of_game = ended_in_a_draw = FALSE;
 	winner = 0;
 	game_board_moves = 0;
 	row_input = column_input = 0;
 
-	// setting up the random number seed based on the local user time
-	time_t current_local_time = time(0);
+	/* setting up the random number seed based on the local user time */
+	current_local_time = time(0);
 	current_local_time *= 60 * 60;
 	srand( (uint) current_local_time );
 
-	// setup game_board default values
+	/* setup game_board default values */
 	{
 		int count = 1;
 
@@ -51,7 +61,7 @@ int main(void)
 		}
 	}
 
-	// program presentation "menu"
+	/* program presentation "menu" */
 	{
 		printf("------------------\n");
 		printf("   TIC TAC TOE    \n");
@@ -60,21 +70,22 @@ int main(void)
 		printf("NOTE: The game board is a grid 3x3, so the first position\n is 1,1 and the last one is 3,3. You start playing as X.\n\nHave fun!\n\n");
 		printf("> Press ENTER to start playing.");
 
-		// NOTE(Douglas): here, this loop is necessary, otherwise stdin will fuck up the
-		//  input down there, the logic won't fail but it will show error messages about
-		//  the syntax to the user, and that shouldn't happen. I could check for EOF, but
-		//  it's not necessary actually.
+		/* NOTE(Douglas): here, this loop is necessary, otherwise stdin will fuck up the
+		 *  input down there, the logic won't fail but it will show error messages about
+		 *  the syntax to the user, and that shouldn't happen. I could check for EOF, but
+		 *  it's not necessary actually.
+		*/
 		while( getchar() != '\n' );
 
 		system("cls");
 	}
 
-	// main game loop
+	/* main game loop */
 	do
 	{
 		system("cls");
 
-		// prints out the game board to the terminal 
+		/* prints out the game board to the terminal */
 		{
 			printf("\n");
 			for(i = 0; i < GAME_BOARD_MAX_ROWS; ++i)
@@ -94,7 +105,7 @@ int main(void)
 			}
 		}
 
-		// check for a winner (useful here because the way the code is structured)
+		/* check for a winner (useful here because the way the code is structured) */
 		if(end_of_game)
 		{
 			global_running = FALSE;
@@ -114,7 +125,7 @@ int main(void)
 			break;
 		}
 
-		// process the user input
+		/* process the user input */
 		{
 			int valid_input, input_result;
 			uint input_length;
@@ -132,16 +143,16 @@ int main(void)
 				input_length = (uint) strlen(terminal_input);
 				input_result = sscanf_s(terminal_input, "%d,%d", &row_input, &column_input);
 				
-				if(input_result == 0 || input_result == EOF) // checking for "sscanf" errors
+				if(input_result == 0 || input_result == EOF) /* checking for "sscanf" errors */
 				{
 					printf("> wrong input syntax, please try again as informed: row,column\n");
 				}
 				else if( (row_input <= 0 || row_input > GAME_BOARD_MAX_ROWS) ||
-				         (column_input <= 0 || column_input > GAME_BOARD_MAX_COLUMNS) ) // checking game board indices
+				         (column_input <= 0 || column_input > GAME_BOARD_MAX_COLUMNS) ) /* checking game board indices */
 				{
 					printf("> wrong index syntax, invalid game board position\n");
 				}
-				else if(input_length != 4) // checking the game board syntax: x,x\n
+				else if(input_length != 4) /* checking the game board syntax: x,x\n */
 				{
 					printf("> wrong input syntax, please try again as informed: row,column\n");
 					continue;
@@ -167,7 +178,7 @@ int main(void)
 			}
 		}
 
-		// generate the computer move
+		/* generate the computer move */
 		if(game_board_moves < 9)
 		{
 			char game_board_pos;
@@ -180,7 +191,7 @@ int main(void)
 				random_board_position = (int) (((float)rand() / (float)RAND_MAX) * 8.0f + 0.5f);
 				game_board_pos = *((char *)game_board + random_board_position);
 
-				if(game_board_pos != 'X' && game_board_pos != 'O') // if it is an available position
+				if(game_board_pos != 'X' && game_board_pos != 'O') /* if it is an available position */
 				{
 					*((char *)game_board + random_board_position) = 'O';
 					++game_board_moves;
@@ -189,28 +200,29 @@ int main(void)
 			} while(!got_available_position);
 		}
 
-		// check for a winner
+		/* check for a winner */
 		{
-			// rows check
+			/* rows check */
 			if( ((winner = game_board[0][0]) == game_board[1][0] && game_board[1][0] == game_board[2][0]) ||
 			    ((winner = game_board[0][1]) == game_board[1][1] && game_board[1][1] == game_board[2][1]) ||
 			    ((winner = game_board[0][2]) == game_board[1][2] && game_board[1][2] == game_board[2][2]) )
 			{
 				end_of_game = TRUE;
 			}
-			// columns check
+			/* columns check */
 			else if( ((winner = game_board[0][0]) == game_board[0][1] && game_board[0][1] == game_board[0][2]) ||
 			         ((winner = game_board[1][0]) == game_board[1][1] && game_board[1][1] == game_board[1][2]) ||
 			         ((winner = game_board[2][0]) == game_board[2][1] && game_board[2][1] == game_board[2][2]) )
 			{
 				end_of_game = TRUE;
 			}
-			// diagonal
-			else if( (winner = game_board[0][0]) == game_board[1][1] && game_board[1][1] == game_board[2][2] )
+			/* diagonal */
+			else if( ((winner = game_board[0][0]) == game_board[1][1] && game_board[1][1] == game_board[2][2]) ||
+			         ((winner = game_board[0][2]) == game_board[1][1] && game_board[1][1] == game_board[2][0]) )
 			{
 				end_of_game = TRUE;
 			}
-			// checking to see if it ended in a draw
+			/* checking to see if it ended in a draw */
 			else if(game_board_moves == 9 && !end_of_game)
 			{
 				end_of_game = TRUE;
@@ -222,3 +234,8 @@ int main(void)
 
 	return 0;
 }
+
+
+#if defined(__cplusplus)
+}
+#endif
