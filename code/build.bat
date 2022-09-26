@@ -2,5 +2,5 @@
 
 if not exist ..\build mkdir ..\build
 pushd ..\build
-	cl -nologo -FC -Z7 -Od -Oi ..\code\tic_tac_toe.c -link -subsystem:console,6.00
+	cl -nologo -FC -Z7 -Od -Oi -W4 -WX ..\code\tic_tac_toe.c -link -subsystem:console,6.00
 popd

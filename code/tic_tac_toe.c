@@ -1,19 +1,9 @@
-// TODOs:
-// compile with -W4 -WX and clean for cl, gcc and clang
-// --
-// Do compiler checks (Symbolic constants, search for errors and warning)
-// Figure out a better way to wrap up the "system("cls");" instruction to work both on Windows and Linux
-// Remove CRuntime (Should I replace stdio.h/stdlib.h? printf, sscanf, strlen, fgets, getchar, etc. ?)
-// should I make this c89-cpp compatible?
-
-// DESIGN IDEAS:
-// get a sense of time to animate the board of the winner with its plays traced (least important)
-// can we do colors? (least important)
-
 #define GLOBAL static
 
 #define TRUE (1)
 #define FALSE (0)
+
+typedef unsigned int uint;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +35,7 @@ int main(void)
 	// setting up the random number seed based on the local user time
 	time_t current_local_time = time(0);
 	current_local_time *= 60 * 60;
-	srand(current_local_time);
+	srand( (uint) current_local_time );
 
 	// setup game_board default values
 	{
@@ -55,7 +45,7 @@ int main(void)
 		{
 			for(j = 0; j < GAME_BOARD_MAX_COLUMNS; ++j)
 			{
-				game_board[i][j] = '0' + count;
+				game_board[i][j] = '0' + (char) count;
 				++count;
 			}
 		}
@@ -126,7 +116,8 @@ int main(void)
 
 		// process the user input
 		{
-			int valid_input, input_result, input_length;
+			int valid_input, input_result;
+			uint input_length;
 		
 			valid_input = FALSE;
 
@@ -138,8 +129,8 @@ int main(void)
 
 				printf("\nPlease choose a position on the board (syntax: row,column): ");
 				fgets(terminal_input, MAX_USER_CHAR_INPUT, stdin);
-				input_length = strlen(terminal_input);
-				input_result = sscanf(terminal_input, "%d,%d", &row_input, &column_input);
+				input_length = (uint) strlen(terminal_input);
+				input_result = sscanf_s(terminal_input, "%d,%d", &row_input, &column_input);
 				
 				if(input_result == 0 || input_result == EOF) // checking for "sscanf" errors
 				{
