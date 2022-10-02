@@ -1,5 +1,70 @@
-/* useful check when compiling the file as as cpp without the crt _fltused init */
-#if defined(__cplusplus)
+/*
+ * Compiler specific constant symbols
+*/
+#if defined(__clang__) || defined(__llvm__)
+	#define COMPILER_LLVM
+#endif
+
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__llvm__)
+	#define COMPILER_GCC
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__llvm__) && !defined(__GNUC__)
+	#define COMPILER_MSVC
+#endif
+
+#if defined(COMPILER_MSVC)
+	#define MAIN_ENTRY mainCRTStartup
+	#define SSCANF sscanf_s
+#elif defined(COMPILER_GCC)
+	#define MAIN_ENTRY main
+	#define SSCANF sscanf
+#elif defined(COMPILER_LLVM)
+	#define MAIN_ENTRY main
+	#define SSCANF sscanf_s
+#endif
+
+
+
+/*
+ * Operating System specif constant symbols
+*/
+#if defined(_WIN32)
+	#define OS_WINDOWS
+#endif
+
+#if defined(__linux__)
+	#define OS_LINUX
+#endif
+
+#if defined(Macintosh) || defined(macintosh) || (defined(__APPLE__) && defined(__MACH__))
+	#define OS_MAC
+#endif
+
+/* TODO: test on linux/macos */
+#if defined(OS_WINDOWS)
+	#define CLEAR_TERMINAL "cls"
+#elif defined(OS_LINUX) || defined(OS_LINUX)
+	#define CLEAR_TERMINAL "clear"
+#endif
+
+
+
+/*
+ * nonsense gcc/llvm warnings
+ * c/cpp file compatibility
+*/
+#if defined(__cplusplus) && (defined(COMPILER_LLVM) || defined(COMPILER_GCC))
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+	#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
+/*
+ * Windows, MSVC, c/cpp file compatibility
+ * useful check when compiling the file as as cpp without the crt _fltused init
+*/
+#if defined(__cplusplus) && defined(COMPILER_MSVC)
 extern "C" {
 int _fltused = 1;
 #endif
@@ -21,11 +86,10 @@ typedef unsigned int uint;
 #define MAX_USER_CHAR_INPUT (61)
 #define GAME_BOARD_MAX_ROWS (3)
 #define GAME_BOARD_MAX_COLUMNS (3)
-#define MAX_AVAILABLE_GAME_BOARD_POSITIONS (GAME_BOARD_MAX_ROWS * GAME_BOARD_MAX_COLUMNS + 1)
 
 GLOBAL int global_running = TRUE;
 
-int mainCRTStartup(void)
+int MAIN_ENTRY(void)
 {
 	int i, j;
 	int end_of_game, ended_in_a_draw;
@@ -63,6 +127,7 @@ int mainCRTStartup(void)
 
 	/* program presentation "menu" */
 	{
+		system(CLEAR_TERMINAL);
 		printf("------------------\n");
 		printf("   TIC TAC TOE    \n");
 		printf("  By: Douglas L.  \n");
@@ -77,13 +142,13 @@ int mainCRTStartup(void)
 		*/
 		while( getchar() != '\n' );
 
-		system("cls");
+		system(CLEAR_TERMINAL);
 	}
 
 	/* main game loop */
 	do
 	{
-		system("cls");
+		system(CLEAR_TERMINAL);
 
 		/* prints out the game board to the terminal */
 		{
@@ -141,7 +206,7 @@ int mainCRTStartup(void)
 				printf("\nPlease choose a position on the board (syntax: row,column): ");
 				fgets(terminal_input, MAX_USER_CHAR_INPUT, stdin);
 				input_length = (uint) strlen(terminal_input);
-				input_result = sscanf_s(terminal_input, "%d,%d", &row_input, &column_input);
+				input_result = SSCANF(terminal_input, "%d,%d", &row_input, &column_input);
 				
 				if(input_result == 0 || input_result == EOF) /* checking for "sscanf" errors */
 				{
@@ -188,7 +253,7 @@ int mainCRTStartup(void)
 
 			do
 			{
-				random_board_position = (int) (((float)rand() / (float)RAND_MAX) * 8.0f + 0.5f);
+				random_board_position = (int) (((float)(rand()) / (float)RAND_MAX) * 8.0f + 0.5f);
 				game_board_pos = *((char *)game_board + random_board_position);
 
 				if(game_board_pos != 'X' && game_board_pos != 'O') /* if it is an available position */
@@ -235,7 +300,10 @@ int mainCRTStartup(void)
 	return 0;
 }
 
+#if defined(__cplusplus) && (defined(COMPILER_LLVM) || defined(COMPILER_GCC)) /* nonsense gcc/llvm warnings */
+	#pragma GCC diagnostic pop
+#endif
 
-#if defined(__cplusplus)
+#if defined(__cplusplus) && defined(COMPILER_MSVC) /* Windows, MSVC, c/cpp file compatibility */
 }
 #endif
