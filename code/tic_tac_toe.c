@@ -60,6 +60,11 @@
 	#pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
+#if defined(COMPILER_LLVM) || defined(COMPILER_GCC)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-result" /* gcc on linux warning about return value of fgets()/system() */
+#endif
+
 /*
  * Windows, MSVC, c/cpp file compatibility
  * useful check when compiling the file as as cpp without the crt _fltused init
@@ -300,8 +305,12 @@ int MAIN_ENTRY(void)
 	return 0;
 }
 
-#if defined(__cplusplus) && (defined(COMPILER_LLVM) || defined(COMPILER_GCC)) /* nonsense gcc/llvm warnings */
+#if defined(__cplusplus) && (defined(COMPILER_LLVM) || defined(COMPILER_GCC)) /* cpp nonsense, gcc/llvm warnings  */
 	#pragma GCC diagnostic pop
+#endif
+
+#if defined(COMPILER_LLVM) || defined(COMPILER_GCC)
+	#pragma GCC diagnostic pop /* gcc on linux warning about return value of fgets()/system() */
 #endif
 
 #if defined(__cplusplus) && defined(COMPILER_MSVC) /* Windows, MSVC, c/cpp file compatibility */
