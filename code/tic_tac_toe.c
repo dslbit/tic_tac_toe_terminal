@@ -44,7 +44,7 @@
 /* TODO: test on linux/macos */
 #if defined(OS_WINDOWS)
 	#define CLEAR_TERMINAL "cls"
-#elif defined(OS_LINUX) || defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_MAC)
 	#define CLEAR_TERMINAL "clear"
 #endif
 
@@ -71,7 +71,7 @@
 */
 #if defined(__cplusplus) && defined(COMPILER_MSVC)
 extern "C" {
-int _fltused = 1;
+	int _fltused;
 #endif
 
 
